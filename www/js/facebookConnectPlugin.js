@@ -151,6 +151,24 @@ if (!window.cordova) {
             }
         },
 
+        publishFeed: function (params, s, f) {
+            try {
+                FB.api("me/feed", "POST", params, function (response) {
+                    if (response.error) {
+                        f(response);
+                    } else {
+                        s(response);
+                    }
+                });
+            } catch (error) {
+                if (!f) {
+                    console.error(error.message);
+                } else {
+                    f(error.message);
+                }
+            }
+        },
+
         // Browser wrapper API ONLY
         browserInit: function (appId, version) {
             if (!version) {
