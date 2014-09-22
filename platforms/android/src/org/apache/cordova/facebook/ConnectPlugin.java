@@ -38,6 +38,7 @@ import com.facebook.model.GraphObject;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.WebDialog;
 import com.facebook.widget.WebDialog.OnCompleteListener;
+import com.facebook.HttpMethod;
 
 public class ConnectPlugin extends CordovaPlugin {
 
@@ -217,65 +218,6 @@ public class ConnectPlugin extends CordovaPlugin {
             callbackContext.error("No valid session found, must call init and login before logout.");
         }
         return true;
-    } else if (action.equals("getLoginStatus")) {
-        callbackContext.success(getResponse());
-        return true;
-    } else if (action.equals("getAccessToken")) {
-        Session session = Session.getActiveSession();
-        if (session != null) {
-            if (session.isOpened()) {
-                callbackContext.success(session.getAccessToken());
-            } else {
-                // Session not open
-                callbackContext.error("Session not open.");
-            }
-        } else {
-            callbackContext
-                    .error("No valid session found, must call init and login before logout.");
-        }
-        return true;
-    } else if (action.equals("logEvent")) {
-        if (args.length() == 0) {
-            // Not enough parameters
-            callbackContext.error("Invalid arguments");
-            return true;
-        }
-        String eventName = args.getString(0);
-        if (args.length() == 1) {
-            logger.logEvent(eventName);
-        } else {
-            // args is greater than 1
-            JSONObject params = args.getJSONObject(1);
-            Bundle parameters = new Bundle();
-
-            Iterator<?> iterator = params.keys();
-            while (iterator.hasNext() ) {
-                try {
-                    // Try get a String
-                    String value = params.getString((String) iterator.next());
-                    parameters.putString((String) iterator.next(), value);
-                } catch (Exception e) {
-                    // Maybe it was an int
-                    Log.w(TAG, "Type in AppEvent parameters was not String for key: " + (String) iterator.next());
-                    try {
-                        int value = params.getInt((String) iterator.next());
-                        parameters.putInt((String) iterator.next(), value);
-                    } catch (Exception e2) {
-                        // Nope
-                        Log.e(TAG, "Unsupported type in AppEvent parameters for key: " + (String) iterator.next());
-                    }
-                }
-            }
-            if (args.length() == 2) {
-                logger.logEvent(eventName, parameters);
-            }
-            if (args.length() == 3) {
-                double value = args.getDouble(2);
-                logger.logEvent(eventName, value, parameters);
-            }
-        }
-        callbackContext.success();
-        return true;
     }
 
     private boolean logPurchase(JSONArray args, CallbackContext callbackContext) throws JSONException
@@ -294,6 +236,79 @@ public class ConnectPlugin extends CordovaPlugin {
         callbackContext.success();
         return true;
     }
+
+	private boolean getLoginStatus(JSONArray args, CallbackContext callbackContext) throws JSONException
+	{
+		callbackContext.success(getResponse());
+    return true;
+	}
+
+	private boolean getAccessToken(JSONArray args, CallbackContext callbackContext) throws JSONException
+	{
+		Session session = Session.getActiveSession();
+    if (session != null) {
+        if (session.isOpened()) {
+            callbackContext.success(session.getAccessToken());
+        } else {
+            // Session not open
+            callbackContext.error("Session not open.");
+        }
+    } else {
+        callbackContext.error("No valid session found, must call init and login before logout.");
+    }
+    return true;
+	}
+
+	private boolean logEvent(JSONArray args, CallbackContext callbackContext) throws JSONException
+	{
+		if (args.length() == 0) {
+        // Not enough parameters
+        callbackContext.error("Invalid arguments");
+        return true;
+    }
+    String eventName = args.getString(0);
+    if (args.length() == 1) {
+        logger.logEvent(eventName);
+    } else {
+        // args is greater than 1
+        JSONObject params = args.getJSONObject(1);
+        Bundle parameters = new Bundle();
+
+        Iterator<?> iterator = params.keys();
+        while (iterator.hasNext() ) {
+            try {
+                // Try get a String
+                String value = params.getString((String) iterator.next());
+                parameters.putString((String) iterator.next(), value);
+            } catch (Exception e) {
+                // Maybe it was an int
+                Log.w(TAG, "Type in AppEvent parameters was not String for key: " + (String) iterator.next());
+                try {
+                    int value = params.getInt((String) iterator.next());
+                    parameters.putInt((String) iterator.next(), value);
+                } catch (Exception e2) {
+                    // Nope
+                    Log.e(TAG, "Unsupported type in AppEvent parameters for key: " + (String) iterator.next());
+                }
+            }
+        }
+        if (args.length() == 2) {
+            logger.logEvent(eventName, parameters);
+        }
+        if (args.length() == 3) {
+            double value = args.getDouble(2);
+            logger.logEvent(eventName, value, parameters);
+        }
+    }
+    callbackContext.success();
+    return true;
+	}
+
+/*
+ 
+        
+    }
+*/
 
     private boolean showDialog(JSONArray args, CallbackContext callbackContext) throws JSONException
     {
@@ -501,7 +516,7 @@ public class ConnectPlugin extends CordovaPlugin {
 
         Request.Callback feedCallback = new Request.Callback() {
             @Override
-            public void onComplete(Response response) {
+            public void onCompleted(Response response) {
                 if (publishFeedContext != null) {
                     if (response.getError() != null) {
                         publishFeedContext.error(response.getError().getErrorMessage());
@@ -527,7 +542,7 @@ public class ConnectPlugin extends CordovaPlugin {
 		if (action.equals("login")) {
 			return login(args, callbackContext);
 		} else if (action.equals("logout")) {
-            return logout(args, callbackContext);
+      return logout(args, callbackContext);
 		} else if (action.equals("logPurchase")) {
 			return logPurchase(args, callbackContext);
 		} else if (action.equals("showDialog")) {
@@ -535,8 +550,14 @@ public class ConnectPlugin extends CordovaPlugin {
 		} else if (action.equals("graphApi")) {
 			return graphApi(args, callbackContext);
 		} else if (action.equals("publishFeed")) {
-            return publishFeed(args, callbackContext);
-        }
+      return publishFeed(args, callbackContext);
+    } else if (action.equals("getLoginStatus")) {
+			return getLoginStatus(args, callbackContext);
+    } else if (action.equals("getAccessToken")) {
+			return getAccessToken(args, callbackContext);
+    } else if (action.equals("logEvent")) {
+			return logEvent(args, callbackContext);
+		}
 		return false;
 	}
 
