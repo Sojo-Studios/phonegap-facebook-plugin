@@ -483,6 +483,8 @@ public class ConnectPlugin extends CordovaPlugin {
 
     private boolean publishFeed(JSONArray args, CallbackContext callbackContext) throws JSONException
     {
+        Log.d(TAG, "------------>publishFeed called");
+
         // @TODO: add in more industrialization from
         // https://developers.facebook.com/docs/android/share#linkapi
 
@@ -517,9 +519,13 @@ public class ConnectPlugin extends CordovaPlugin {
         Request.Callback feedCallback = new Request.Callback() {
             @Override
             public void onCompleted(Response response) {
+								Log.d(TAG, "Facebook publishFeed responded with " + response);
+
                 if (publishFeedContext != null) {
                     if (response.getError() != null) {
-                        publishFeedContext.error(response.getError().getErrorMessage());
+						Log.d(TAG, "Errored: " + response.getError().getErrorMessage());
+						Log.e(TAG, "Errored: " + response.getError().getErrorMessage());
+                        publishFeedContext.error("ERROR WAS: " + response.getError().getErrorMessage());
                     } else {
                         GraphObject graphObject = response.getGraphObject();
                         publishFeedContext.success(graphObject.getInnerJSONObject());
@@ -539,10 +545,12 @@ public class ConnectPlugin extends CordovaPlugin {
 	@Override
 	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
 
+		Log.d(TAG, "==========>Execute called with : " + action);
+
 		if (action.equals("login")) {
 			return login(args, callbackContext);
 		} else if (action.equals("logout")) {
-      return logout(args, callbackContext);
+            return logout(args, callbackContext);
 		} else if (action.equals("logPurchase")) {
 			return logPurchase(args, callbackContext);
 		} else if (action.equals("showDialog")) {
@@ -550,12 +558,12 @@ public class ConnectPlugin extends CordovaPlugin {
 		} else if (action.equals("graphApi")) {
 			return graphApi(args, callbackContext);
 		} else if (action.equals("publishFeed")) {
-      return publishFeed(args, callbackContext);
-    } else if (action.equals("getLoginStatus")) {
+			return publishFeed(args, callbackContext);
+		} else if (action.equals("getLoginStatus")) {
 			return getLoginStatus(args, callbackContext);
-    } else if (action.equals("getAccessToken")) {
+		} else if (action.equals("getAccessToken")) {
 			return getAccessToken(args, callbackContext);
-    } else if (action.equals("logEvent")) {
+		} else if (action.equals("logEvent")) {
 			return logEvent(args, callbackContext);
 		}
 		return false;

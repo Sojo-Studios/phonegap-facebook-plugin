@@ -76,6 +76,10 @@ if (!window.cordova) {
             cordova.exec(s, f, "FacebookConnectPlugin", "showDialog", [options]);
         },
 
+	    publishFeed: function(params, s, f) {
+		    cordova.exec(s, f, "FacebookConnectPlugin", "publishFeed", [params]);
+	    },
+
         login: function (permissions, s, f) {
             cordova.exec(s, f, "FacebookConnectPlugin", "login", permissions);
         },
