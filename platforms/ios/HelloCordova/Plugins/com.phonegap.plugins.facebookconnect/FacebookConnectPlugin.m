@@ -432,10 +432,7 @@
 	self.feedCallbackId = command.callbackId;
 
 	NSMutableDictionary *options = [[command.arguments lastObject] mutableCopy];
-	NSString* method = [[NSString alloc] initWithString:[options objectForKey:@"method"]];
-	if ([options objectForKey:@"method"]) {
-	    [options removeObjectForKey:@"method"];
-	}
+
 	__block BOOL paramsOK = YES;
 	NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
 	[options enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
