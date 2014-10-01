@@ -16,6 +16,7 @@
 @property (strong, nonatomic) NSString* loginCallbackId;
 @property (strong, nonatomic) NSString* dialogCallbackId;
 @property (strong, nonatomic) NSString* graphCallbackId;
+@property (strong, nonatomic) NSString* feedCallbackId;
 
 @end
 
@@ -423,10 +424,66 @@
     #endif
 }
 
+- (void) publishFeed:(CDVInvokedUrlCommand*)command
+{
+	NSLog(@"---------->PublishFeed Called");
+
+	// Save the callback ID
+	self.feedCallbackId = command.callbackId;
+
+	NSMutableDictionary *options = [[command.arguments lastObject] mutableCopy];
+	NSString* method = [[NSString alloc] initWithString:[options objectForKey:@"method"]];
+	if ([options objectForKey:@"method"]) {
+	    [options removeObjectForKey:@"method"];
+	}
+	__block BOOL paramsOK = YES;
+	NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+	[options enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+	    if ([obj isKindOfClass:[NSString class]]) {
+	        params[key] = obj;
+	    } else {
+	        NSError *error;
+	        NSData *jsonData = [NSJSONSerialization
+	                            dataWithJSONObject:obj
+	                            options:0
+	                            error:&error];
+	        if (!jsonData) {
+	            paramsOK = NO;
+	            // Error
+	            *stop = YES;
+	        }
+	        params[key] = [[NSString alloc]
+	                       initWithData:jsonData
+	                       encoding:NSUTF8StringEncoding];
+	    }
+	}];
+
+	if (!paramsOK) {
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                         messageAsString:@"Error completing publish feed."];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.feedCallbackId];
+    } else {
+		[FBRequestConnection
+		startWithGraphPath:@"/me/feed"
+			parameters:params
+			HTTPMethod:@"POST"
+			completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
+				CDVPluginResult* pluginResult = nil;
+				if (!error) {
+					NSDictionary *response = (NSDictionary *) result;
+
+					pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:response];
+				} else {
+					pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+									messageAsString:[error localizedDescription]];
+				}
+				[self.commandDelegate sendPluginResult:pluginResult callbackId:self.feedCallbackId];
+			}];
+    }
+}
+
 - (void) graphApi:(CDVInvokedUrlCommand *)command
 {
-    
-    
     // Save the callback ID
     self.graphCallbackId = command.callbackId;
     
@@ -571,3 +628,4 @@
 }
 
 @end
+
